@@ -8,6 +8,7 @@ import json
 import pandas as pd
 import yaml
 import smtplib
+import sys
 
 ############################        Constants        ###########################
 
@@ -30,12 +31,12 @@ def get_listings(page_OLX, price_goal, max_pages):
 
     #Interate throw pages
     for i in range(max_pages):
-        print("Searching page %i" % int(i+1))
         page_request = page_OLX + string_pagination + str(i+1)
         page = requests.get(page_request, stream=True, headers=headers)
         #Tests if there are no more ads
         if (re.search('Nenhum anúncio foi encontrado.', page.text)):
             break
+        print("Searching page %i" % int(i+1))
         #Get all the ads
         ads = re.search('data-json=\"(.*)}', page.text).group(1)
         ads = ads.replace("&quot;", "\"")
@@ -72,6 +73,7 @@ def get_info_page(link):
     #Process the info
     title = data['ad']['subject']
     description = data['ad']['body']
+    print(description)
     price = data['ad']['priceValue']
     old_price = data['ad']['oldPrice']
     owner = data['ad']['user']['name']
@@ -87,12 +89,26 @@ def get_info_page(link):
 
 #Sends an alert with the info from de ad.
 def alert(deals, email):
+    print('Enviando email')
     try:
         server = smtplib.SMTP(email['server'], email['port'])
         sent_from = email['email']
         to = email['email']
         subject = "Deals found!"
-        #body = open("email.html").read()
+        ads_ = ''
+        for i in deals.iterrows():
+            ads_ = ads_ + open("ad.html").read().format(title=i[1].title, 
+                                         desctiption=i[1]['description'], 
+                                         name=i[1].owner,
+                                         phone=i[1].phone,
+                                         price=i[1].price,
+                                         url=i[1].url)
+        ads_ = ads_.replace("&lt;br&gt;", "<br>")
+        body = open("email.html").read().format(ads=ads_)
+
+        with open('teste.html', 'w') as f:
+            f.write(body)
+
 
     except Exception as e:
         print(e)
@@ -101,11 +117,13 @@ if __name__=="__main__":
 
     #Page of the product you want a deal
     page_OLX = "https://rs.olx.com.br/autos-e-pecas/motos/bmw/g/650"
+    #page_OLX = sys.argv[1]
     #Price goal
-    price_goal = 25000
+    price_goal = 22000
+    #price_goal = sys.argv[1]
 
     #Config some variables
-    config = yaml.load(open('config.yml'))
+    config = yaml.safe_load(open('config.yml'))
     email = {'email': config['email'], 'password': config['password'], 'server': config['server'], 'port': config['port']}
     max_pages = config['max_pages']
 
