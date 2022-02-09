@@ -7,7 +7,9 @@ import random
 import json
 import pandas as pd
 import yaml
-import smtplib
+import smtplib, ssl
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 import sys
 
 ############################        Constants        ###########################
@@ -73,7 +75,6 @@ def get_info_page(link):
     #Process the info
     title = data['ad']['subject']
     description = data['ad']['body']
-    print(description)
     price = data['ad']['priceValue']
     old_price = data['ad']['oldPrice']
     owner = data['ad']['user']['name']
@@ -91,11 +92,12 @@ def get_info_page(link):
 def alert(deals, email):
     print('Enviando email')
     try:
-        server = smtplib.SMTP(email['server'], email['port'])
-        sent_from = email['email']
-        to = email['email']
-        subject = "Deals found!"
+        message = MIMEMultipart("alternative")
+        message["Subject"] = "Deals found!"
+        message["From"] = email['email']
+        message["To"] = email['email']
         ads_ = ''
+        #Build email
         for i in deals.iterrows():
             ads_ = ads_ + open("ad.html").read().format(title=i[1].title, 
                                          desctiption=i[1]['description'], 
@@ -105,9 +107,15 @@ def alert(deals, email):
                                          url=i[1].url)
         ads_ = ads_.replace("&lt;br&gt;", "<br>")
         body = open("email.html").read().format(ads=ads_)
+        body = MIMEText(body, "html")
 
-        with open('teste.html', 'w') as f:
-            f.write(body)
+        #Sent email
+        context = ssl.create_default_context()
+        with smtplib.SMTP_SSL(email['server'], email['port'], context=context) as server:
+            server.login(email['email'], email['password'])
+            server.sendmail(
+                email['email'], email['email'], body.as_string()
+            )
 
 
     except Exception as e:
