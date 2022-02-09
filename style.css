@@ -1,39 +1,73 @@
 body {
-    font-family: "Montserrat";font-size: 16px;
-  }
-  ul {
-  list-style-type: none;
-  overflow: hidden;
-  }
-  li {
-  font-weight: bold;
-  width: 100%;
-  margin-bottom: 2rem; 
-  }
-  .bb-title {
-  position: relative;
+font-family: "Montserrat";
+font-size: 16px;
+padding:0;
+margin:0;
+}
+ul {
+list-style-type: none;
+overflow: hidden;
+}
+li {
+font-weight: bold;
+width: 100%;
+margin-bottom: 2rem; 
+}
+.bb-title {
+position: relative;
+display: inline-block;
+}
+.bb-title::before {
+content: '';
+position: absolute;
+background-color: #7D18FD;
+width: 100%;
+height: 3px;
+bottom: -5px;
+left: 0;
+right: 0;
+}
+.bb-title2 {
+position: relative;
+display: inline-block;
+}
+.bb-title2::before {
+content: '';
+position: absolute;
+width: 100%;
+height: 3px;
+bottom: -5px;
+left: 0;
+right: 0;
+}
+.parent {
+  margin: 0.5rem;
+  text-align: center;
+}
+
+.left {
+  text-align: center;
   display: inline-block;
-  }
-  .bb-title::before {
-  content: '';
-  position: absolute;
-  background-color: #7D18FD;
-  width: 100%;
-  height: 3px;
-  bottom: -5px;
-  left: 0;
-  right: 0;
-  }
-  .bb-title2 {
-  position: relative;
+  vertical-align: middle;
+  width: 48%;
+}
+
+.right {
+  text-align: center;
   display: inline-block;
+  vertical-align: middle;
+  padding: 10px;
+  width: 48%;
+  border-left: 2px double #cccccc;
+}
+@media screen and (max-width: 633px) {
+  .right{
+  text-align: center;
+  display: inline-block;
+  vertical-align: middle;
+  padding: 10px;
+  width: 48%;
+  border-top: 2px double #cccccc;
+  border-left: none;
   }
-  .bb-title2::before {
-  content: '';
-  position: absolute;
-  width: 100%;
-  height: 3px;
-  bottom: -5px;
-  left: 0;
-  right: 0;
-  }
+}
