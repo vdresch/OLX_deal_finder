@@ -11,6 +11,7 @@ import smtplib, ssl
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import sys
+import sqlite3
 
 ############################        Constants        ###########################
 
@@ -22,6 +23,9 @@ headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleW
 #This function will scrap the pages for links where the price is under the goal. 
 # If it is, it will call a funtion that will scrap more info about the add and another to notify the user.
 def get_listings(page_OLX, price_goal, max_pages):
+    #Get links that were already sent
+    repeats = repeated()
+
     #Pagination changes depending on how the surch was made
     if(re.search('q=', page_OLX)):
         string_pagination = "&o="
@@ -49,9 +53,10 @@ def get_listings(page_OLX, price_goal, max_pages):
         for ad in ads['listingProps']['adList']:
             #If price is good, open the ad
             if 'isPubListingItem' not in ad:
-                if(int(ad['price'].replace('R$', '').replace('.','')) < price_goal):
-                    print("Deal found!")
-                    deals = deals.append(get_info_page(ad['url']), ignore_index=True)
+                if(ad['url'] not in repeats):
+                    if(int(ad['price'].replace('R$', '').replace('.','')) < price_goal):
+                        print("Deal found!")
+                        deals = deals.append(get_info_page(ad['url']), ignore_index=True)
         
         time.sleep(random.randint(3,4)*0.45234)
 
@@ -117,9 +122,40 @@ def alert(deals, email):
                 email['email'], email['email'], body.as_string()
             )
 
+        sent(deals)
+
 
     except Exception as e:
         print(e)
+
+
+#Store ads that were sent
+def sent(deals):
+    conn = sqlite3.connect('sent.db')
+
+    for deal in deals.iterrows():   
+        conn.execute("INSERT INTO sent (owner, title, price, old_price, phone, description, url) \
+            VALUES ('{}', '{}', '{}', '{}', '{}', '{}', '{}')".format(deal[1].owner, deal[1].title, deal[1].price, deal[1].old_price, deal[1].phone,
+                        deal[1].description, deal[1].url))
+
+    conn.commit()
+
+    conn.close()
+
+#Get an list with all ads already sent to the user, so it doesn't waste time or repeat an email
+def repeated():
+    conn = sqlite3.connect('sent.db')
+
+    query = conn.execute('''SELECT url FROM sent;''')
+
+    repeats = []
+
+    for row in query:
+        repeats.append(row[0])
+
+    conn.close()
+
+    return repeats
 
 if __name__=="__main__":
 
@@ -127,7 +163,7 @@ if __name__=="__main__":
     page_OLX = "https://rs.olx.com.br/autos-e-pecas/motos/bmw/g/650"
     #page_OLX = sys.argv[1]
     #Price goal
-    price_goal = 22000
+    price_goal = 25000
     #price_goal = sys.argv[1]
 
     #Config some variables
@@ -139,4 +175,5 @@ if __name__=="__main__":
     deals = get_listings(page_OLX, price_goal, max_pages)
 
     #Emits an email alert with all the deals found
-    alert(deals, email)
+    if(not deals.empty):
+        alert(deals, email)
