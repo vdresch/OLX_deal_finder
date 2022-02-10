@@ -160,11 +160,9 @@ def repeated():
 if __name__=="__main__":
 
     #Page of the product you want a deal
-    page_OLX = "https://rs.olx.com.br/autos-e-pecas/motos/bmw/g/650"
-    #page_OLX = sys.argv[1]
+    page_OLX = sys.argv[1]
     #Price goal
-    price_goal = 25000
-    #price_goal = sys.argv[1]
+    price_goal = sys.argv[1]
 
     #Config some variables
     config = yaml.safe_load(open('config.yml'))
